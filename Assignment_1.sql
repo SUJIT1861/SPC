@@ -415,5 +415,168 @@ SELECT * FROM sales_order_items WHERE sales_order_id = 200 OR quantity >= 50;
 
 -- 33) Show shipments where shipment_status = 'Delivered' AND delivery_date BETWEEN'2025-01-01' AND '2025-12-31'.
 SELECT * FROM shipments WHERE shipment_status = 'Delivered' AND delivery_date BETWEEN'2025-01-01' AND '2025-12-31'
-
 ===================================================================================================================
+
+ASSIGNMENT 4
+
+-- Q1: INNER JOIN
+-- Show all purchase orders along with the supplier name who provided them.
+
+SELECT p.po_id,p.po_date,p.status,s.supplier_name
+FROM suppliers AS s
+INNER JOIN purchase_orders AS p
+ON s.supplier_id = p.supplier_id
+
+-- Q2: LEFT JOIN
+-- Show all customers and any sales orders they have placed. Include customers who have not placed any orders.
+
+SELECT c.customer_name,s.sales_order_id,s.order_date
+FROM customers AS c
+LEFT JOIN sales_orders AS s
+ON c.customer_id = s.customer_id
+
+-- Q3: RIGHT JOIN
+-- Show all sales orders and the name of the customer who placed them. Include orders even if customer info is missing.
+
+SELECT s.sales_order_id, s.order_date, c.customer_name
+FROM sales_orders AS s
+RIGHT JOIN customers AS c
+ON s.customer_id = c.customer_id
+
+-- Q4: FULL OUTER JOIN
+-- Show all suppliers and all warehouses together. Include suppliers without warehouses and warehouses without suppliers.
+
+SELECT s.supplier_name ,w.warehouse_name
+FROM suppliers AS s
+FULL JOIN warehouses AS w
+ON s.supplier_id = w.warehouse_id
+
+-- Q5: INNER JOIN
+-- Show each sales order along with its shipment details (shipment date and status).
+
+SELECT s.sales_order_id, s.order_date, sh.shipment_date, sh.shipment_status
+FROM sales_orders AS s
+FULL JOIN shipments AS sh
+ON s.sales_order_id = sh.sales_order_id
+
+-- Q6: LEFT JOIN
+-- Show all warehouses and the inventory stored in them. Include warehouses with no inventory.
+
+SELECT w.warehouse_name, i.product_id, i.quantity_on_hand
+FROM warehouses AS w
+LEFT JOIN inventory AS i
+ON w.warehouse_id = i.warehouse_id
+
+-- Q7: FULL OUTER JOIN
+-- Show all purchase orders and all purchase order items together. Include orders without items and items without orders.
+
+SELECT p.po_id, po.po_item_id
+FROM purchase_orders AS p
+FULL JOIN purchase_order_items AS po
+ON p.po_id = po.po_id
+
+-- Q8: INNER JOIN
+-- Show each customer along with the products they ordered and the quantity.
+
+SELECT c.customer_name, po.product_id, po.quantity
+FROM customers AS c
+INNER JOIN purchase_order_items AS po
+ON c.customer_id = po.product_id
+
+-- Q9: LEFT JOIN
+-- Show all suppliers and the purchase orders linked to them. Include suppliers with no purchase orders.
+
+SELECT s.supplier_name, p.po_id, p.status
+FROM suppliers AS s
+LEFT JOIN purchase_orders AS p
+ON s.supplier_id = p.supplier_id
+
+-- Q10: RIGHT JOIN
+-- Show all warehouses and any inventory linked to them. Include warehouses even if inventory is missing.
+
+SELECT w.warehouse_name, i.product_id
+FROM warehouses AS w
+RIGHT JOIN inventory AS i
+ON w.warehouse_id = i.warehouse_id
+
+-- Q11: FULL OUTER JOIN
+-- Show all customers and all suppliers together. Include unmatched rows from both sides.
+
+SELECT c.customer_name, s.supplier_name
+FROM customers AS c
+FULL JOIN suppliers AS s
+ON c.customer_id= s.supplier_id
+
+-- Q12: INNER JOIN
+-- Show all shipments along with the warehouse name from which they were shipped.
+
+SELECT s.shipment_id, w.warehouse_name, s.shipment_status
+FROM shipments AS s
+INNER JOIN warehouses AS w
+ON s.warehouse_id = w.warehouse_id
+
+-- Q13: LEFT JOIN
+-- Show all sales orders and their shipment dates. Include orders that have not been shipped yet.
+
+SELECT s.sales_order_id, sh.shipment_date
+FROM sales_orders AS s
+LEFT JOIN shipments AS sh
+ON s.sales_order_id = sh.sales_order_id
+
+-- Q14: RIGHT JOIN
+-- Show all purchase orders and the supplier names. Include orders even if supplier info is missing.
+
+SELECT p.po_id, s.supplier_name
+FROM purchase_orders AS p
+RIGHT JOIN suppliers AS s
+ON p.supplier_id = s.supplier_id
+
+
+-- Q15: FULL OUTER JOIN
+-- Show all sales orders and all purchase orders together. Include unmatched rows from both sides.
+
+SELECT s.sales_order_id, p.po_id
+FROM sales_orders AS s
+FULL JOIN purchase_orders AS p
+ON s.sales_order_id= p.po_id
+
+-- Q16: INNER JOIN
+-- Show inventory details along with the purchase order item price for the same product.
+
+SELECT i.product_id, w.unit_price
+FROM inventory AS i
+INNER JOIN purchase_order_items AS w
+ON i.product_id = w.product_id
+
+-- Q17: LEFT JOIN
+-- Show all customers and the shipment status of their orders. Include customers without shipments
+
+SELECT c.customer_name, sh.shipment_status
+FROM customers AS c
+LEFT JOIN shipments AS sh
+ON c.customer_id = sh.sales_order_id
+
+-- Q18: RIGHT JOIN
+-- Show all warehouses and the shipment status of orders shipped from them. Include warehouses with no shipments.
+
+SELECT w.warehouse_name, s.shipment_status
+FROM warehouses AS w
+RIGHT JOIN shipments AS s
+ON w.warehouse_id = s.warehouse_id
+
+-- Q19: FULL OUTER JOIN
+-- Show all inventory items and all sales order items together. Include unmatched rows from both sides.
+
+SELECT i.product_id, s.quantity
+FROM inventory AS i
+FULL JOIN sales_order_items AS s
+ON i.product_id= s.product_id
+
+-- Q20: INNER JOIN
+-- Show all purchase order items along with the purchase order details (order date and status).
+
+SELECT p.po_item_id, po.po_id, po.po_date, po.status
+FROM purchase_order_items AS p
+INNER JOIN purchase_orders AS po
+ON p.po_id = po.po_id
+
