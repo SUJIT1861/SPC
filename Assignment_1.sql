@@ -1,14 +1,14 @@
 -- ----------------------------------------------Suppliers--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-create table suppliers(
-supplier_id serial,
-supplier_name varchar(150),
+CREATE TABLE suppliers(
+supplier_id serial primary key,
+supplier_name varchar(150) NOT NULL,
 contact_person VARCHAR(100),
 phone_number VARCHAR(20),
-email VARCHAR(150),
-country VARCHAR(100),
-created_at TIMESTAMP
+email VARCHAR(150) NOT NULL UNIQUE,
+country VARCHAR(100) NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO suppliers VALUES
@@ -29,12 +29,12 @@ select * from suppliers;
 
 
 create table warehouses(
-warehouse_id SERIAL,
-warehouse_name VARCHAR(150),
-city VARCHAR(100),
+warehouse_id SERIAL PRIMARY KEY,
+warehouse_name VARCHAR(150) NOT NULL,
+city VARCHAR(100)NOT NULL,
 state VARCHAR(100),
-country VARCHAR(100),
-capacity_units INT,
+country VARCHAR(100) NOT NULL,
+capacity_units INT NOT NULL,
 created_at TIMESTAMP
 )
 
@@ -54,15 +54,14 @@ select * from warehouses;
 -- -------------------------------------------------Customers-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 create table customers(
-customer_id SERIAL,
-customer_name VARCHAR(150),
+customer_id SERIAL PRIMARY KEY,
+customer_name VARCHAR(150) NOT NULL,
 phone_number VARCHAR(20),
-email VARCHAR(150),
+email VARCHAR(150) NOT NULL UNIQUE,
 city VARCHAR(100),
-country VARCHAR(100),
-created_at TIMESTAMP
+country VARCHAR(100)NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 
 INSERT INTO customers
@@ -78,16 +77,17 @@ select * from customers;
 
 -- -------------------------------------------------Purchase_Orders-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-create table purchase_orders(
-po_id SERIAL,
-supplier_id INT,
-po_date DATE,
-expected_date DATE,
-status VARCHAR(50),
-total_amount NUMERIC(12,2),
-created_at TIMESTAMP
-)
+CREATE TABLE purchase_orders(
+po_id SERIAL PRIMARY KEY,
+supplier_id INT NOT NULL,
+po_date DATE NOT NULL,
+expected_date DATE CHECK (expected_date IS NULL OR expected_date >= po_date),
+status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+total_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00  CHECK (total_amount >= 0),
+FOREIGN KEY (supplier_id)
+REFERENCES suppliers(supplier_id),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 INSERT INTO purchase_orders
 (supplier_id, po_date, expected_date, status, total_amount, created_at)
@@ -104,14 +104,17 @@ select * from purchase_orders;
 -- --------------------------------------------------Purchase_Order_Items----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-create table purchase_order_items(
-po_item_id SERIAL,
-po_id INT,
-product_id INT,
-quantity INT,
-unit_price NUMERIC(10,2),
-created_at TIMESTAMP
-)
+CREATE TABLE purchase_order_items(
+po_item_id SERIAL PRIMARY KEY,
+po_id INT NOT NULL,
+product_id INT NOT NULL,
+quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+unit_price NUMERIC(10,2) NOT NULL CHECK(unit_price >= 0),
+CONSTRAINT uq_po_product UNIQUE (po_id, product_id),
+FOREIGN KEY (po_id)
+REFERENCES purchase_orders(po_id),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 INSERT INTO purchase_order_items
 (po_id, product_id, quantity, unit_price, created_at)
@@ -129,12 +132,14 @@ select * from purchase_order_items;
 
 
 create table inventory(
-inventory_id SERIAL,
-warehouse_id INT,
-product_id INT,
-quantity_on_hand INT,
-reorder_level INT,
-last_updated TIMESTAMP
+inventory_id SERIAL PRIMARY KEY,
+warehouse_id INT NOT NULL,
+product_id INT NOT NULL,
+quantity_on_hand INT NOT NULL DEFAULT 0 CHECK (quantity_on_hand >= 0) ,
+reorder_level INT NOT NULL DEFAULT 10 CHECK (reorder_level >= 0),
+last_updated TIMESTAMP,
+CONSTRAINT uq_value UNIQUE(warehouse_id, product_id),
+FOREIGN KEY (warehouse_id) REFERENCES warehouses(warehouse_id)
 )
 
 
@@ -155,12 +160,13 @@ select * from inventory;
 
 
 create table sales_orders(
-sales_order_id SERIAL,
-customer_id INT,
-order_date DATE,
-status VARCHAR(50),
-total_amount NUMERIC(12,2),
-created_at TIMESTAMP
+sales_order_id SERIAL PRIMARY KEY,
+customer_id INT NOT NULL,
+order_date DATE NOT NULL,
+status VARCHAR(50) NOT NULL DEFAULT'PENDING',
+total_amount NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (total_amount>=0),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 )
 
 INSERT INTO sales_orders
@@ -178,12 +184,14 @@ select * from sales_orders;
 
 
 create table sales_order_items(
-so_item_id serial,
-sales_order_id int,
-product_id int,
-quantity int,
-unit_price NUMERIC(10,2),
-created_at TIMESTAMP
+so_item_id serial PRIMARY KEY,
+sales_order_id int NOT NULL,
+product_id int NOT NULL,
+quantity int NOT NULL CHECK(quantity > 0),
+unit_price NUMERIC(10,2)NOT NULL CHECK( unit_price >= 0),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CONSTRAINT QP_UNIQUE UNIQUE (sales_order_id, product_id),
+FOREIGN KEY (sales_order_id) REFERENCES sales_orders(sales_order_id)
 )
 
 INSERT INTO sales_order_items
@@ -199,15 +207,18 @@ select * from sales_order_items;
 
 -- -----------------------------------------------------------Shipments-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 create table shipments(
-shipment_id SERIAL,
-sales_order_id INT,
-warehouse_id INT,
-shipment_date DATE,
-delivery_date DATE,
-shipment_status VARCHAR(50),
-tracking_number VARCHAR(100),
-created_at TIMESTAMP
+shipment_id SERIAL PRIMARY KEY,
+sales_order_id INT NOT NULL,
+warehouse_id INT NOT NULL,
+shipment_date DATE NOT NULL,
+delivery_date DATE CHECK(delivery_date IS NULL OR delivery_date >= shipment_date),
+shipment_status VARCHAR(50) NOT NULL DEFAULT 'CREATED',
+tracking_number VARCHAR(100) UNIQUE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (sales_order_id) REFERENCES sales_orders(sales_order_id), 
+FOREIGN KEY (warehouse_id) REFERENCES warehouses(warehouse_id)
 )
 
 INSERT INTO shipments
@@ -215,10 +226,11 @@ INSERT INTO shipments
 VALUES
 (1, 1, '2025-12-07', '2025-12-10', 'Processing', 'TRK10001', '2025-12-11 12:45:43'),
 (2, 2, '2025-12-06', '2025-12-11', 'In Transit', 'TRK10002', '2025-12-05 17:36:07'),
-(3, 2, '2025-12-06', '2025-12-13', 'Delivered',  'TRK10003', '2025-12-10 01:12:56'),
+(3, 2, '2025-12-06', '2025-12-13', ' ',  'TRK10003', '2025-12-10 01:12:56'),
 (4, 3, '2025-12-10', '2025-12-19', 'Delayed',    'TRK10004', '2025-12-08 05:53:27'),
 (5, 4, '2025-12-12', '2025-12-13', 'Returned',   'TRK10005', '2025-12-14 03:38:09');
 
+TRUNCATE TABLE shipments
 select * from shipments;
 
 -- --------------------------------------------------------------------------------------------
